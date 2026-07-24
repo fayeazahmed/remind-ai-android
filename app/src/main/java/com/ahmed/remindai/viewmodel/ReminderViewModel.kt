@@ -1,4 +1,4 @@
-package com.ahmed.remindai
+package com.ahmed.remindai.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -38,7 +38,7 @@ class ReminderViewModel(
             errorMessage = null
             try {
                 reminders = repository.getReminders()
-                Log.d(TAG, "Reminders loaded: ${reminders}")
+                Log.d(TAG, "Reminders loaded: $reminders")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load reminders", e)
                 errorMessage = "Failed to load reminders: ${e.message}"

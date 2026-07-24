@@ -4,140 +4,135 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ahmed.remindai.model.Reminder
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.ahmed.remindai.screen.AiChatScreen
+import com.ahmed.remindai.screen.ReminderScreen
 import com.ahmed.remindai.ui.theme.RemindAITheme
 
-
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
+
         setContent {
             RemindAITheme {
-                ReminderScreen()
+                RemindAiApp()
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+private sealed class AppScreen(
+    val route: String,
+    val title: String,
+    val icon: ImageVector
+) {
+
+    object Reminder : AppScreen(
+        route = "reminders",
+        title = "Reminders",
+        icon = Icons.Default.Home
+    )
+
+    object AI : AppScreen(
+        route = "ai",
+        title = "AI",
+        icon = Icons.AutoMirrored.Filled.Chat
+    )
+}
+
 @Composable
-fun ReminderScreen(viewModel: ReminderViewModel = viewModel()) {
-    var inputText by remember { mutableStateOf("") }
+fun RemindAiApp() {
+
+    val navController = rememberNavController()
+
+    val items = listOf(
+        AppScreen.Reminder,
+        AppScreen.AI
+    )
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Reminders") })
-        },
+
         bottomBar = {
-            Column {
-                viewModel.errorMessage?.let { msg ->
-                    Text(
-                        text = msg,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+
+            NavigationBar {
+
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+                val currentDestination = navBackStackEntry?.destination
+
+                items.forEach { screen ->
+
+                    NavigationBarItem(
+
+                        selected = currentDestination
+                            ?.hierarchy
+                            ?.any { it.route == screen.route } == true,
+
+                        onClick = {
+
+                            navController.navigate(screen.route) {
+
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+
+                        icon = {
+
+                            Icon(
+                                imageVector = screen.icon,
+                                contentDescription = screen.title
+                            )
+                        },
+
+                        label = {
+                            Text(screen.title)
+                        }
                     )
                 }
-                InputBar(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    onSend = {
-                        viewModel.addReminder(inputText)
-                        inputText = ""
-                    }
+            }
+        }
+
+    ) { innerPadding ->
+
+        NavHost(
+            navController = navController,
+            startDestination = AppScreen.Reminder.route
+        ) {
+
+            composable(AppScreen.Reminder.route) {
+
+                ReminderScreen(
+                    contentPadding = innerPadding
                 )
             }
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            when {
-                viewModel.isLoading && viewModel.reminders.isEmpty() -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-                viewModel.reminders.isEmpty() -> {
-                    Text(
-                        text = "No reminders yet",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                else -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(viewModel.reminders, key = { it.id }) { reminder ->
-                            ReminderRow(reminder = reminder, onDelete = { viewModel.deleteReminder(reminder) })
-                            HorizontalDivider()
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
-@Composable
-fun ReminderRow(reminder: Reminder, onDelete: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = reminder.title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge
-        )
-        IconButton(onClick = onDelete) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Delete reminder",
-                tint = MaterialTheme.colorScheme.error
-            )
-        }
-    }
-}
+            composable(AppScreen.AI.route) {
 
-@Composable
-fun InputBar(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onSend: () -> Unit
-) {
-    Surface(tonalElevation = 3.dp, shadowElevation = 3.dp) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("Write a reminder…") },
-                maxLines = 4
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            IconButton(onClick = onSend) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Add reminder"
+                AiChatScreen(
+                    contentPadding = innerPadding
                 )
             }
         }
