@@ -58,7 +58,8 @@ dependencies {
 
     implementation(libs.okhttp.logging.interceptor)
 
-    implementation("androidx.navigation:navigation-compose:2.9.3")
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.datastore.preferences)
 
     testImplementation(libs.junit)
 

@@ -1,5 +1,6 @@
 package com.ahmed.remindai.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +14,10 @@ class AiChatViewModel(
     private val repository: ReminderRepository =
         ReminderRepository(RetrofitInstance.api)
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "AiChatViewModel"
+    }
 
     var response by mutableStateOf("")
         private set
@@ -41,6 +46,7 @@ class AiChatViewModel(
 
             } catch (e: Exception) {
 
+                Log.e(TAG, "Failed to ask AI", e)
                 errorMessage = e.message ?: "Unknown error"
 
             } finally {

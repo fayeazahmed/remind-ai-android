@@ -6,23 +6,31 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ahmed.remindai.screen.AiChatScreen
+import com.ahmed.remindai.screen.AuthScreen
 import com.ahmed.remindai.screen.ReminderScreen
 import com.ahmed.remindai.ui.theme.RemindAITheme
+import com.ahmed.remindai.viewmodel.AuthViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -33,9 +41,22 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             RemindAITheme {
-                RemindAiApp()
+                RootApp()
             }
         }
+    }
+}
+
+@Composable
+fun RootApp(
+    authViewModel: AuthViewModel = viewModel()
+) {
+    val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
+
+    if (isLoggedIn) {
+        RemindAiApp(onLogout = { authViewModel.logout() })
+    } else {
+        AuthScreen()
     }
 }
 
@@ -58,8 +79,9 @@ private sealed class AppScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RemindAiApp() {
+fun RemindAiApp(onLogout: () -> Unit) {
 
     val navController = rememberNavController()
 
@@ -69,6 +91,17 @@ fun RemindAiApp() {
     )
 
     Scaffold(
+
+        topBar = {
+            TopAppBar(
+                title = { Text("RemindAI") },
+                actions = {
+                    IconButton(onClick = onLogout) {
+                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout")
+                    }
+                }
+            )
+        },
 
         bottomBar = {
 
