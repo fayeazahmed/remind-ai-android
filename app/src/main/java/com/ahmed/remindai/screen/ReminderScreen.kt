@@ -40,6 +40,7 @@ import androidx.compose.foundation.lazy.items
 import com.ahmed.remindai.viewmodel.ReminderViewModel
 import com.ahmed.remindai.component.EmptyReminderState
 import com.ahmed.remindai.component.ReminderCard
+import com.ahmed.remindai.component.ReminderCreatedDialog
 
 @Composable
 fun ReminderScreen(
@@ -209,5 +210,24 @@ fun ReminderScreen(
                 }
             }
         }
+    }
+
+    viewModel.newlyCreatedReminder?.let { reminder ->
+
+        ReminderCreatedDialog(
+            reminder = reminder,
+            onDismiss = {
+                viewModel.dismissNewReminderDialog()
+            },
+            onSave = { title, body, notifyAt, priority ->
+                viewModel.saveEditedReminder(
+                    id = reminder.id,
+                    title = title,
+                    body = body,
+                    notifyAt = notifyAt,
+                    priority = priority
+                )
+            }
+        )
     }
 }

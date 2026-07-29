@@ -28,6 +28,12 @@ class ReminderViewModel(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+    var newlyCreatedReminder by mutableStateOf<Reminder?>(null)
+        private set
+
+    var isSavingReminder by mutableStateOf(false)
+        private set
+
     init {
         loadReminders()
     }
@@ -56,8 +62,44 @@ class ReminderViewModel(
             try {
                 val newReminder = repository.addReminder(trimmed)
                 reminders = listOf(newReminder) + reminders
+                newlyCreatedReminder = newReminder
             } catch (e: Exception) {
                 errorMessage = "Failed to add reminder: ${e.message}"
+            }
+        }
+    }
+
+    fun dismissNewReminderDialog() {
+        newlyCreatedReminder = null
+    }
+
+    fun saveEditedReminder(
+        id: Int,
+        title: String,
+        body: String,
+        notifyAt: String?,
+        priority: Int
+    ) {
+        viewModelScope.launch {
+            errorMessage = null
+            isSavingReminder = true
+            try {
+                val updated = repository.updateReminder(
+                    id = id,
+                    title = title,
+                    body = body,
+                    notifyAt = notifyAt,
+                    priority = priority
+                )
+                reminders = reminders.map {
+                    if (it.id == id) updated else it
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to update reminder", e)
+                errorMessage = "Failed to update reminder: ${e.message}"
+            } finally {
+                isSavingReminder = false
+                newlyCreatedReminder = null
             }
         }
     }

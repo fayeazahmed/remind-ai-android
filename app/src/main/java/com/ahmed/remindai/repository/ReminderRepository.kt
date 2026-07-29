@@ -7,6 +7,7 @@ import com.ahmed.remindai.network.ReminderDto
 import com.ahmed.remindai.network.SearchQuery
 import com.ahmed.remindai.network.SearchReminderDto
 import com.ahmed.remindai.network.SummarizeRequest
+import com.ahmed.remindai.network.UpdateReminderRequest
 
 class ReminderRepository(
     private val api: ReminderApi
@@ -17,6 +18,23 @@ class ReminderRepository(
 
     suspend fun addReminder(text: String): Reminder =
         api.createReminder(CreateReminderRequest(text)).toUiModel()
+
+    suspend fun updateReminder(
+        id: Int,
+        title: String,
+        body: String,
+        notifyAt: String?,
+        priority: Int
+    ): Reminder =
+        api.updateReminder(
+            id,
+            UpdateReminderRequest(
+                title = title,
+                body = body,
+                notifyAt = notifyAt,
+                priority = priority
+            )
+        ).toUiModel()
 
     suspend fun deleteReminder(id: Int) {
         api.deleteReminder(id)

@@ -16,3 +16,10 @@ data class CreateReminderRequest(
     @SerializedName("raw_text")
     val rawText: String
 )
+
+data class UpdateReminderRequest(
+    val title: String,
+    val body: String,
+    val notifyAt: String?,
+    val priority: Int
+)
