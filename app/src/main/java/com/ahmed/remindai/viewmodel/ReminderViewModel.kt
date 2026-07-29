@@ -42,6 +42,7 @@ class ReminderViewModel(
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
+
             try {
                 reminders = repository.getReminders()
                 Log.d(TAG, "Reminders loaded: $reminders")
@@ -56,9 +57,12 @@ class ReminderViewModel(
 
     fun addReminder(text: String) {
         val trimmed = text.trim()
+
         if (trimmed.isEmpty()) return
+
         viewModelScope.launch {
             errorMessage = null
+
             try {
                 val newReminder = repository.addReminder(trimmed)
                 reminders = listOf(newReminder) + reminders
@@ -80,37 +84,79 @@ class ReminderViewModel(
         notifyAt: String?,
         priority: Int
     ) {
+
+        val existing = reminders.firstOrNull { it.id == id } ?: return
+
+        updateReminder(
+            existing.copy(
+                title = title,
+                body = body,
+                notifyAt = notifyAt,
+                priority = priority
+            ),
+            dismissDialog = true
+        )
+    }
+
+    fun toggleReminderDone(
+        reminder: Reminder,
+        done: Boolean
+    ) {
+        updateReminder(
+            reminder.copy(done = done)
+        )
+    }
+
+    private fun updateReminder(
+        reminder: Reminder,
+        dismissDialog: Boolean = false
+    ) {
+
         viewModelScope.launch {
+
             errorMessage = null
             isSavingReminder = true
+
             try {
-                val updated = repository.updateReminder(
-                    id = id,
-                    title = title,
-                    body = body,
-                    notifyAt = notifyAt,
-                    priority = priority
-                )
+
+                val updated = repository.updateReminder(reminder)
+
                 reminders = reminders.map {
-                    if (it.id == id) updated else it
+                    if (it.id == updated.id) updated else it
                 }
+
             } catch (e: Exception) {
+
                 Log.e(TAG, "Failed to update reminder", e)
                 errorMessage = "Failed to update reminder: ${e.message}"
+
             } finally {
+
                 isSavingReminder = false
-                newlyCreatedReminder = null
+
+                if (dismissDialog) {
+                    newlyCreatedReminder = null
+                }
             }
         }
     }
 
     fun deleteReminder(reminder: Reminder) {
+
         viewModelScope.launch {
+
             errorMessage = null
+
             try {
+
                 repository.deleteReminder(reminder.id)
-                reminders = reminders.filterNot { it.id == reminder.id }
+
+                reminders = reminders.filterNot {
+                    it.id == reminder.id
+                }
+
             } catch (e: Exception) {
+
                 errorMessage = "Failed to delete reminder: ${e.message}"
             }
         }

@@ -20,19 +20,16 @@ class ReminderRepository(
         api.createReminder(CreateReminderRequest(text)).toUiModel()
 
     suspend fun updateReminder(
-        id: Int,
-        title: String,
-        body: String,
-        notifyAt: String?,
-        priority: Int
+        reminder: Reminder
     ): Reminder =
         api.updateReminder(
-            id,
+            reminder.id,
             UpdateReminderRequest(
-                title = title,
-                body = body,
-                notifyAt = notifyAt,
-                priority = priority
+                title = reminder.title,
+                body = reminder.body,
+                notifyAt = reminder.notifyAt,
+                priority = reminder.priority,
+                done = reminder.done
             )
         ).toUiModel()
 

@@ -21,5 +21,6 @@ data class UpdateReminderRequest(
     val title: String,
     val body: String,
     val notifyAt: String?,
-    val priority: Int
+    val priority: Int,
+    val done: Boolean
 )

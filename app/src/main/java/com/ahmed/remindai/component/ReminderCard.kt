@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -13,7 +14,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ahmed.remindai.model.Reminder
@@ -21,11 +24,14 @@ import com.ahmed.remindai.model.Reminder
 @Composable
 fun ReminderCard(
     reminder: Reminder,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onDoneChanged: (Boolean) -> Unit
 ) {
 
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .alpha(if (reminder.done) 0.6f else 1f),
         shape = RoundedCornerShape(20.dp)
     ) {
 
@@ -43,7 +49,12 @@ fun ReminderCard(
                 Text(
                     text = reminder.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    textDecoration = if (reminder.done) {
+                        TextDecoration.LineThrough
+                    } else {
+                        TextDecoration.None
+                    }
                 )
 
                 if (reminder.body.isNotBlank()) {
@@ -54,6 +65,9 @@ fun ReminderCard(
                         text = reminder.body,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.alpha(
+                            if (reminder.done) 0.7f else 1f
+                        ),
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -74,15 +88,25 @@ fun ReminderCard(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            IconButton(
-                onClick = onDelete
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete Reminder",
-                    tint = MaterialTheme.colorScheme.error
+                Checkbox(
+                    checked = reminder.done,
+                    onCheckedChange = onDoneChanged
                 )
+
+                IconButton(
+                    onClick = onDelete
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Reminder",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }
