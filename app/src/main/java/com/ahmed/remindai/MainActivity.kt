@@ -1,9 +1,15 @@
 package com.ahmed.remindai
 
+import android.Manifest
+import android.app.AlarmManager
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -31,11 +37,20 @@ import com.ahmed.remindai.screen.AuthScreen
 import com.ahmed.remindai.screen.ReminderScreen
 import com.ahmed.remindai.ui.theme.RemindAITheme
 import com.ahmed.remindai.viewmodel.AuthViewModel
+import androidx.core.net.toUri
 
 class MainActivity : ComponentActivity() {
 
+    private val notificationPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        requestNotificationPermission()
+        requestExactAlarmPermission()
 
         enableEdgeToEdge()
 
@@ -44,6 +59,37 @@ class MainActivity : ComponentActivity() {
                 RootApp()
             }
         }
+    }
+
+    private fun requestNotificationPermission() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+            notificationPermissionLauncher.launch(
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+        }
+    }
+
+    private fun requestExactAlarmPermission() {
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return
+        }
+
+        val alarmManager =
+            getSystemService(ALARM_SERVICE) as AlarmManager
+
+        if (alarmManager.canScheduleExactAlarms()) {
+            return
+        }
+
+        startActivity(
+            Intent(
+                Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                "package:$packageName".toUri()
+            )
+        )
     }
 }
 
@@ -97,7 +143,10 @@ fun RemindAiApp(onLogout: () -> Unit) {
                 title = { Text("RemindAI") },
                 actions = {
                     IconButton(onClick = onLogout) {
-                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout")
+                        Icon(
+                            Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Logout"
+                        )
                     }
                 }
             )
@@ -133,7 +182,6 @@ fun RemindAiApp(onLogout: () -> Unit) {
                         },
 
                         icon = {
-
                             Icon(
                                 imageVector = screen.icon,
                                 contentDescription = screen.title

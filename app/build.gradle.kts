@@ -61,6 +61,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
 
+    implementation(libs.androidx.core)
+
     testImplementation(libs.junit)
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
